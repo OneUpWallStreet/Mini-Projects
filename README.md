@@ -1,1 +1,1 @@
-Random code, that I wrote to understand some simple concepts I want to use in my main projects 
+Random code, I wrote to understand some simple concepts that I want to use in my main projects 
