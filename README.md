@@ -1,0 +1,1 @@
+Random code, that I wrote to understand some simple concepts I want to use in my main projects 
