@@ -239,21 +239,26 @@ class BackGammon:
 
             #Using First Dice
             possible_first_moves = self.possible_move(player,board,rolls[0])
+
             for m1 in possible_first_moves:
                 temp_board = copy.deepcopy(board)
                 _,done = self.step(m1,temp_board,player)
                 possible_second_moves = self.possible_move(player,temp_board,rolls[1])
+
                 for m2 in possible_second_moves:
                     moves.append(np.array([m1,m2]))
 
+
             if rolls[0]!=rolls[1]:
                 possible_first_moves = self.possible_move(player,board,rolls[1])
+
                 for m1 in possible_first_moves:
                     temp_board = copy.deepcopy(board)
                     _,done = self.step(m1,temp_board,player)
                     possible_second_moves = self.possible_move(player,temp_board,rolls[0])
                     for m2 in possible_second_moves:
                         moves.append(np.array([m1,m2]))
+
 
         elif len(rolls)==4:
 
@@ -299,9 +304,6 @@ class BackGammon:
 
         return moves
 
-
-
-
     def possible_move(self,player,board,die):
 
         possible_moves = []
@@ -319,37 +321,51 @@ class BackGammon:
                     bar_moves.append(np.array([26,pos]))
 
             else:
-                if np.sum(board[6:24]>0)==0:
+                if len(np.where(board[7:25]>0)[0])==0:
                     if board[die]>0:
                         possible_moves.append(np.array([die,0]))
+                        terminal_moves.append(np.array([die,0]))
 
                 
-                possible_start_pos = np.where(board[0:25]>0)[0]
-                
-                # print(possible_start_pos)
+                possible_start_pos = np.where(board[1:25]>0)[0]
+
+                for i,p in enumerate(possible_start_pos):
+                    possible_start_pos[i] +=1
+
 
                 for start_pos in possible_start_pos:
 
                     next_pos = start_pos - die
                     if next_pos>0:
                         if board[next_pos]>-2:
+
                             possible_moves.append(np.array([start_pos,next_pos]))
                             terminal_moves.append(np.array([start_pos,next_pos]))
 
-            if not bar_moves and len(np.where(board[7:24]>0)[0])==0:
-                possible_start_pos = np.where(board[0:25]>0)[0]
+                    # if len(np.where(board[7:25]>0)[0])==0 and next_pos==0:
+
+
+
+
+                        
+            if not bar_moves and len(np.where(board[7:25]>0)[0])==0:
+                # print('Nope')
+                possible_start_pos = np.where(board[1:25]>0)[0]
+                
+                for i,p in enumerate(possible_start_pos):
+                    possible_start_pos[i] +=1
 
                 for start_pos in possible_start_pos:
 
                     if die-start_pos==0:
                         possible_moves.append(np.array([start_pos,0]))
+                        
 
                     elif die-start_pos>0 and len(terminal_moves)==0:
                         possible_moves.append(np.array([start_pos,0]))
 
 
         if player == -1:
-
 
             if board[27]>0:
                 pos = die
@@ -359,12 +375,14 @@ class BackGammon:
 
             else:
 
-                if np.sum(board[1:19]<0)==0:
+                if len(np.where(board[0:19]<0)[0])==0:
 
                     if board[25-die]<0:
                         possible_moves.append(np.array([25-die,25]))
+                        terminal_moves.append(np.array([25-die,25]))
 
                 possible_start_pos = np.where(board[0:25]<0)[0]
+                # print(possible_start_pos)
 
                 for start_pos in possible_start_pos:
 
@@ -374,11 +392,10 @@ class BackGammon:
                             possible_moves.append(np.array([start_pos,next_pos]))
                             terminal_moves.append(np.array([start_pos,next_pos]))
 
-            if not bar_moves and len(np.where(board[0:18]<0)[0])==0:
-
-
+            if not bar_moves and len(np.where(board[0:19]<0)[0])==0:
 
                 possible_start_pos = np.where(board[0:25]<0)[0]
+                # print(possible_start_pos)
 
 
                 for start_pos in possible_start_pos:
@@ -388,7 +405,6 @@ class BackGammon:
                     
                     elif die >(25 - start_pos) and len(terminal_moves)==0:
                         possible_moves.append(np.array([start_pos,25]))
-
 
                     
         return possible_moves
