@@ -2,6 +2,7 @@ import numpy as np
 import time
 import copy
 
+
 class BackGammon:
 
     def __init__(self):
@@ -18,6 +19,7 @@ class BackGammon:
         self.board[19] = -5
         self.board[24] = 2
         self.moves_4 = []
+        self.player = 0
 
         #Board[25] = -1 Goal
         #Board[0] = 1 Goal
@@ -80,18 +82,82 @@ class BackGammon:
     #         return 1,True
 
     #     return 0,False
+
+    def random_player(self):
+        return np.random.choice([-1,1])
+
+    def change_player(self,player):
+
+        if player == 1:
+            return -1
+        else:
+            return 1
         
+    def board_features(self):
+        
+        players = [1,-1]
+        features_vector = []
+        for player in players:
+            for i,point in enumerate(self.board[1:25]):
+                if point >0 and  player == 1 or point<0 and player==-1:
+                    if point>0:
+                        p = 1
+                    elif point<0:
+                        p = -1
+
+                    if p == player and (point>0 or point<0):
+                        if point == 1 or point == -1:
+                            features_vector += [1.0, 0.0, 0.0, 0.0]
+                        elif point == 2 or point == -2:
+                            features_vector += [1.0, 1.0, 0.0, 0.0]
+                        elif point >=3 or point <=-3:
+                            features_vector += [1.0, 1.0, 1.0, (point - 3.0) / 2.0]
+                else:
+                    features_vector += [0.0, 0.0, 0.0, 0.0]
+
+            #Number of units on bar and total units on non bar
+            if player == 1:
+                non_bar_units = 0
+                for i in self.board[1:25]:
+                    if i>0:
+                        non_bar_units +=i
+                bar_units = self.board[26]
+
+                features_vector += [bar_units/2.0, non_bar_units/15.0]
+
+            elif player == -1:
+                non_bar_units = 0
+                for i in self.board[1:25]:
+                    if i<0:
+                        non_bar_units +=i
+                bar_units = self.board[27]
+
+                features_vector += [bar_units/2.0, non_bar_units/15.0]
+
+        if self.player == 1:
+
+            features_vector += [1.0, 0.0]
+
+        elif self.player == -1:
+  
+            features_vector += [0.0, 1.0]
+
+
+
+        assert len(features_vector) == 198, print("Should be 198 instead of {}".format(len(features_vector)))
+        return features_vector
+
 
     def step(self,move,board,player):
 
         reward,done = self.check_terminal()
+        self.player = player
 
         if done==True:
             return reward,done
 
         first_pos = move[0]
         next_pos = move[1]
-
 
 
         if player == 1:
@@ -195,6 +261,7 @@ class BackGammon:
             possible_first_moves = self.possible_move(player,board,rolls[1])
             
             for m1 in possible_first_moves:
+
                 temp_board_1 = copy.deepcopy(board)
 
                 _,done = self.step(m1,temp_board_1,player)
@@ -269,12 +336,17 @@ class BackGammon:
                             possible_moves.append(np.array([start_pos,next_pos]))
                             terminal_moves.append(np.array([start_pos,next_pos]))
 
-            if not terminal_moves and not bar_moves and np.sum(self.board[6:24]>0)==0:
+            if not bar_moves and len(np.where(board[7:24]>0)[0])==0:
                 possible_start_pos = np.where(board[0:25]>0)[0]
+
                 for start_pos in possible_start_pos:
 
-                    if die-start_pos>0:
+                    if die-start_pos==0:
                         possible_moves.append(np.array([start_pos,0]))
+
+                    elif die-start_pos>0 and len(terminal_moves)==0:
+                        possible_moves.append(np.array([start_pos,0]))
+
 
         if player == -1:
 
@@ -302,12 +374,21 @@ class BackGammon:
                             possible_moves.append(np.array([start_pos,next_pos]))
                             terminal_moves.append(np.array([start_pos,next_pos]))
 
-            if not terminal_moves and not bar_moves and np.sum(board[1:19]<0)==0:
+            if not bar_moves and len(np.where(board[0:18]<0)[0])==0:
+
+
+
                 possible_start_pos = np.where(board[0:25]<0)[0]
+
+
                 for start_pos in possible_start_pos:
 
-                    if die > (25-start_pos):
+                    if die == (25-start_pos):
                         possible_moves.append(np.array([start_pos,25]))
+                    
+                    elif die >(25 - start_pos) and len(terminal_moves)==0:
+                        possible_moves.append(np.array([start_pos,25]))
+
 
                     
         return possible_moves
